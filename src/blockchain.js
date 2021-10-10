@@ -43,8 +43,9 @@ class Blockchain {
    * Utility method that return a Promise that will resolve with the height of the chain
    */
   getChainHeight() {
+    let self = this;
     return new Promise((resolve, reject) => {
-      resolve(this.height);
+      resolve(self.height);
     });
   }
 
@@ -81,7 +82,7 @@ class Blockchain {
         self.chain.push(block);
 
         // Increase chain height by 1
-        self.height + 1;
+        self.height += 1;
 
         // Resolve with block added
         return resolve("Block added");
@@ -133,12 +134,15 @@ class Blockchain {
       try {
         // 5 minutes
         const fiveMinutes = 60 * 5;
+
         // Get time from message
         const messageTime = parseInt(message.split(":")[1]);
+
         // Get currentTime
         const currentTime = parseInt(
           new Date().getTime().toString().slice(0, -3)
         );
+
         // Check if time elapsed is less than 5 minutes
         if (currentTime - messageTime >= fiveMinutes)
           return reject(
@@ -156,6 +160,7 @@ class Blockchain {
           signature,
           star,
         });
+
         await self._addBlock(block);
         return resolve("Block added");
       } catch (error) {
@@ -213,8 +218,14 @@ class Blockchain {
       try {
         // Find all stars by address on chain
         self.chain.forEach((block) => {
+          // Skip genesis block
+          if (!block.height) return;
+          // Decode body and add found star to array stars
           const blockBodyDecoded = block.getBData();
-          const star = blockBodyDecoded && blockBodyDecoded.star;
+          const star =
+            blockBodyDecoded &&
+            blockBodyDecoded.address === address &&
+            blockBodyDecoded.star;
           if (star) stars.push(star);
         });
 
@@ -239,15 +250,27 @@ class Blockchain {
       self.chain.forEach((block) => {
         (async () => {
           try {
+            // Is current block valid?
             const valid = await block.validate();
-            if (!valid) errorLog.push(block);
+            if (!valid)
+              errorLog.push({
+                error: `Block validation failed at height ${block.height}`,
+              });
+
+            // Is previous block hash the same?
+            const previousBlock = await self.getBlockByHeight(block.height - 1);
+            if (previousBlock.hash !== block.previousBlockHash)
+              errorLog.push({
+                error: `Previous block hash validation failed at height ${block.height}`,
+              });
           } catch (error) {
             return reject(error);
           }
         })();
       });
+
       if (errorLog.length) return reject(errorLog);
-      return resolve(true);
+      return resolve("Chain is valid");
     });
   }
 }

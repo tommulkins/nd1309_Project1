@@ -41,8 +41,14 @@ class Block {
         // Save in auxiliary variable the current block hash
         const currentHash = self.hash;
 
+        // Set block hash to null
+        self.hash = null;
+
         // Recalculate the hash of the Block
         const recalculatedHash = SHA256(JSON.stringify(self)).toString();
+
+        // Replace hash into block
+        self.hash = currentHash;
 
         // Comparing if the hashes changed
         if (currentHash !== recalculatedHash) {
@@ -74,7 +80,7 @@ class Block {
     // Parse the data to an object to be retrieve.
     const dataObj = JSON.parse(decodedData);
     // Resolve with the data if the object isn't the Genesis block
-    if (!self.height) return null;
+    if (!this.height) return null;
     return dataObj;
   }
 }
