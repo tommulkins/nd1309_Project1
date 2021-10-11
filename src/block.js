@@ -38,7 +38,7 @@ class Block {
     let self = this;
     return new Promise((resolve, reject) => {
       try {
-        // Recalculate the hash of the Block
+        // Recalculate the hash of the Block and compare against its current hash
         resolve(
           self.hash ===
             SHA256(
