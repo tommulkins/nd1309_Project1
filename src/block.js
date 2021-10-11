@@ -56,9 +56,9 @@ class Block {
           return resolve(false);
         }
         // Returning the Block is valid
-        return resolve(true);
+        resolve(true);
       } catch (error) {
-        return reject(error);
+        reject(error);
       }
     });
   }

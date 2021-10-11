@@ -85,7 +85,7 @@ class Blockchain {
         self.height += 1;
 
         // Resolve with block added
-        return resolve("Block added");
+        resolve(block);
       } catch (error) {
         reject(error);
       }
@@ -102,7 +102,7 @@ class Blockchain {
    */
   requestMessageOwnershipVerification(address) {
     return new Promise((resolve) => {
-      return resolve(
+      resolve(
         `${address}:${new Date()
           .getTime()
           .toString()
@@ -162,7 +162,14 @@ class Blockchain {
         });
 
         await self._addBlock(block);
-        return resolve("Block added");
+        const errorLog = await self.validateChain();
+        if (errorLog.length) {
+          // Remove block from chain as the chain can't be validated
+          self.chain.pop();
+          return reject(errorLog);
+        }
+
+        resolve(block);
       } catch (error) {
         reject(error);
       }
@@ -181,7 +188,7 @@ class Blockchain {
       try {
         const foundBlock = self.chain.find((block) => block.hash === hash);
         if (!foundBlock) return reject(`Can't find block with hash: ${hash}`);
-        return resolve(foundBlock);
+        resolve(foundBlock);
       } catch (error) {
         reject(error);
       }
@@ -230,7 +237,7 @@ class Blockchain {
         });
 
         // Return found stars
-        return resolve(stars);
+        resolve(stars);
       } catch (error) {
         reject(error);
       }
@@ -269,8 +276,7 @@ class Blockchain {
         })();
       });
 
-      if (errorLog.length) return reject(errorLog);
-      return resolve("Chain is valid");
+      resolve(errorLog);
     });
   }
 }
